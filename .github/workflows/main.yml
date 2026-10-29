@@ -1,41 +1,53 @@
-  - uses: actions/setup-python@v5
-    with:
-      python-version: "3.11"
+name: Build APK
 
-  - name: System packages
-    run: |
-      sudo apt-get update
-      sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf automake libtool \
-        pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+on:
+  workflow_dispatch:
+  push:
 
-  - name: Buildozer (fixed versions)
-    run: pip install buildozer==1.5.0 cython==3.0.11 "setuptools<70"
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
 
-  - name: Cache buildozer
-    uses: actions/cache@v4
-    with:
-      path: ~/.buildozer
-      key: buildozer-v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-  - name: Build
-    working-directory: mobile
-    run: |
-      set -o pipefail
-      yes | buildozer -v android debug 2>&1 | tee build.log
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf automake libtool \
+            pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
 
-  - name: Upload APK
-    uses: actions/upload-artifact@v4
-    with:
-      name: luvvix-apk
-      path: mobile/bin/*.apk
+      - name: Buildozer (fixed versions)
+        run: pip install buildozer==1.5.0 cython==3.0.11 "setuptools<70"
 
-  - name: Save error log
-    if: failure()
-    run: tail -n 300 mobile/build.log > build-error.txt || echo "no log" > build-error.txt
+      - name: Cache buildozer
+        uses: actions/cache@v4
+        with:
+          path: ~/.buildozer
+          key: buildozer-v2
 
-  - name: Upload error log
-    if: failure()
-    uses: actions/upload-artifact@v4
-    with:
-      name: build-error-log
-      path: build-error.txt
+      - name: Build
+        working-directory: mobile
+        run: |
+          set -o pipefail
+          yes | buildozer -v android debug 2>&1 | tee build.log
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: luvvix-apk
+          path: mobile/bin/*.apk
+
+      - name: Save error log
+        if: failure()
+        run: tail -n 300 mobile/build.log > build-error.txt || echo "no log" > build-error.txt
+
+      - name: Upload error log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-error-log
+          path: build-error.txt
