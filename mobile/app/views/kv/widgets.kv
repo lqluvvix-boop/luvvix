@@ -1,0 +1,319 @@
+#:import T app.views.theme
+#:import dp kivy.metrics.dp
+
+<Screen>:
+    canvas.before:
+        Color:
+            rgba: T.BG
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<AppLabel@Label>:
+    color: T.TEXT
+    font_size: '15sp'
+    halign: 'left'
+    valign: 'middle'
+    text_size: self.width, None
+    size_hint_y: None
+    height: self.texture_size[1] + dp(4)
+
+<MutedLabel@AppLabel>:
+    color: T.MUTED
+    font_size: '13sp'
+
+<TitleLabel@AppLabel>:
+    font_size: '22sp'
+    bold: True
+
+<ErrorLabel@AppLabel>:
+    color: T.DANGER
+    font_size: '14sp'
+    height: (self.texture_size[1] + dp(6)) if self.text else 0
+    opacity: 1 if self.text else 0
+
+<Field@TextInput>:
+    multiline: False
+    write_tab: False
+    size_hint_y: None
+    height: dp(46)
+    font_size: '16sp'
+    padding: [dp(12), (self.height - self.line_height) / 2]
+    background_normal: ''
+    background_active: ''
+    background_disabled_normal: ''
+    background_color: (1, 1, 1, 1) if not self.readonly else (0.93, 0.94, 0.96, 1)
+    foreground_color: T.TEXT if not self.readonly else T.MUTED
+    cursor_color: T.ACCENT
+    hint_text_color: T.MUTED
+    canvas.after:
+        Color:
+            rgba: T.ACCENT if self.focus else T.BORDER
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(8))
+            width: 1.3 if self.focus else 1
+
+<FieldCaption@MutedLabel>:
+    font_size: '12sp'
+
+<BaseButton@Button>:
+    size_hint_y: None
+    height: dp(46)
+    font_size: '16sp'
+    bold: True
+    background_normal: ''
+    background_down: ''
+    background_disabled_normal: ''
+    background_color: 0, 0, 0, 0
+    disabled_color: 1, 1, 1, 0.9
+
+<PrimaryButton@BaseButton>:
+    color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: T.DISABLED if self.disabled else (T.ACCENT_DOWN if self.state == 'down' else T.ACCENT)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+
+<DangerButton@BaseButton>:
+    color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: T.DISABLED if self.disabled else (T.DANGER_DOWN if self.state == 'down' else T.DANGER)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+
+<SecondaryButton@BaseButton>:
+    color: T.ACCENT
+    disabled_color: T.MUTED
+    canvas.before:
+        Color:
+            rgba: T.ACCENT_SOFT if self.state == 'normal' else T.BORDER
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+
+<LinkButton@BaseButton>:
+    color: T.ACCENT
+    bold: False
+    font_size: '15sp'
+    height: dp(38)
+
+<BarButton@Button>:
+    size_hint: None, 1
+    width: max(dp(48), self.texture_size[0] + dp(20))
+    font_size: '15sp'
+    color: 1, 1, 1, 1
+    background_normal: ''
+    background_down: ''
+    background_color: (1, 1, 1, 0.15) if self.state == 'down' else (0, 0, 0, 0)
+
+<AppSpinner@Spinner>:
+    size_hint_y: None
+    height: dp(46)
+    font_size: '15sp'
+    color: T.TEXT
+    background_normal: ''
+    background_down: ''
+    background_color: 0, 0, 0, 0
+    text_size: self.width - dp(24), None
+    halign: 'left'
+    shorten: True
+    option_cls: 'SpinnerRow'
+    disabled_color: T.MUTED
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 1) if not self.disabled else (0.93, 0.94, 0.96, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(8)]
+        Color:
+            rgba: T.BORDER
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(8))
+    canvas.after:
+        Color:
+            rgba: T.MUTED
+        Triangle:
+            points: [self.right - dp(22), self.center_y + dp(3), self.right - dp(12), self.center_y + dp(3), self.right - dp(17), self.center_y - dp(4)]
+
+<SpinnerRow@SpinnerOption>:
+    height: dp(46)
+    color: T.TEXT
+    background_normal: ''
+    background_color: (0.9, 0.93, 0.99, 1) if self.state == 'down' else (1, 1, 1, 1)
+    text_size: self.width - dp(24), None
+    halign: 'left'
+    shorten: True
+
+<Card@BoxLayout>:
+    orientation: 'vertical'
+    padding: dp(16)
+    spacing: dp(10)
+    size_hint_y: None
+    height: self.minimum_height
+    canvas.before:
+        Color:
+            rgba: T.SURFACE
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(12)]
+        Color:
+            rgba: T.BORDER
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(12))
+
+<TopBar>:
+    size_hint_y: None
+    height: dp(56)
+    padding: [dp(4), 0, dp(4), 0]
+    spacing: dp(4)
+    canvas.before:
+        Color:
+            rgba: T.TOPBAR
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BarButton:
+        text: '‹ Назад' if root.show_back else ''
+        disabled: not root.show_back
+        opacity: 1 if root.show_back else 0
+        width: (max(dp(48), self.texture_size[0] + dp(20))) if root.show_back else dp(8)
+        on_release: app.nav.back()
+    Label:
+        text: root.title
+        bold: True
+        font_size: '18sp'
+        color: 1, 1, 1, 1
+        halign: 'left'
+        valign: 'middle'
+        text_size: self.size
+        shorten: True
+    BarButton:
+        text: root.action_text
+        opacity: 1 if root.action_text else 0
+        disabled: not root.action_text
+        on_release: root.dispatch('on_action')
+    BarButton:
+        text: 'Выйти' if root.show_logout else ''
+        opacity: 1 if root.show_logout else 0
+        disabled: not root.show_logout
+        width: (max(dp(48), self.texture_size[0] + dp(20))) if root.show_logout else 0
+        on_release: app.confirm_logout()
+
+<BusyBar@Widget>:
+    active: False
+    size_hint_y: None
+    height: dp(3)
+    opacity: 1 if self.active else 0
+    canvas:
+        Color:
+            rgba: T.ACCENT
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<ItemRow>:
+    orientation: 'horizontal'
+    padding: [dp(14), dp(8)]
+    spacing: dp(10)
+    canvas.before:
+        Color:
+            rgba: (0.93, 0.95, 0.99, 1) if self.state == 'down' else T.SURFACE
+        Rectangle:
+            pos: self.x, self.y + dp(1)
+            size: self.width, self.height - dp(1)
+    BoxLayout:
+        orientation: 'vertical'
+        AppLabel:
+            text: root.title
+            bold: True
+            shorten: True
+            shorten_from: 'right'
+            size_hint_y: 1
+        MutedLabel:
+            text: root.subtitle
+            shorten: True
+            size_hint_y: 1
+    Label:
+        text: root.qty
+        color: T.ACCENT
+        bold: True
+        font_size: '15sp'
+        size_hint_x: None
+        width: dp(90)
+        halign: 'right'
+        valign: 'middle'
+        text_size: self.size
+
+<UserRow>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: dp(128)
+    padding: dp(12)
+    spacing: dp(6)
+    canvas.before:
+        Color:
+            rgba: T.SURFACE
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(10)]
+    AppLabel:
+        text: root.title
+        bold: True
+        shorten: True
+    MutedLabel:
+        text: root.subtitle
+        shorten: True
+    BoxLayout:
+        spacing: dp(10)
+        size_hint_y: None
+        height: dp(46)
+        AppSpinner:
+            id: role_spinner
+            text: root.role_title
+            values: root.role_values
+            disabled: root.is_self
+            on_text: root.on_role_selected(self.text)
+        SecondaryButton:
+            size_hint_x: None
+            width: dp(140)
+            disabled: root.is_self
+            text: 'Заблокировать' if root.active else 'Разблокировать'
+            color: T.DANGER if root.active else T.SUCCESS
+            on_release: root.toggle_active()
+
+<ConfirmPopup>:
+    size_hint: 0.9, None
+    height: dp(230)
+    auto_dismiss: True
+    separator_color: T.ACCENT
+    title_size: '17sp'
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(8)
+        spacing: dp(12)
+        Label:
+            text: root.message
+            font_size: '15sp'
+            halign: 'left'
+            valign: 'top'
+            text_size: self.size
+        BoxLayout:
+            size_hint_y: None
+            height: dp(46)
+            spacing: dp(10)
+            SecondaryButton:
+                text: 'Отмена'
+                on_release: root.dismiss()
+            DangerButton:
+                text: root.confirm_text
+                on_release: root.confirm()

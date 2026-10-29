@@ -1,0 +1,95 @@
+#:import T app.views.theme
+#:import dp kivy.metrics.dp
+
+<MenuTile@ButtonBehavior+BoxLayout>:
+    icon: ''
+    title: ''
+    hint: ''
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: dp(76)
+    padding: dp(16)
+    spacing: dp(14)
+    canvas.before:
+        Color:
+            rgba: (0.93, 0.95, 0.99, 1) if self.state == 'down' else T.SURFACE
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(12)]
+        Color:
+            rgba: T.BORDER
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(12))
+    Label:
+        text: root.icon
+        font_size: '24sp'
+        bold: True
+        color: T.ACCENT
+        size_hint_x: None
+        width: dp(36)
+    BoxLayout:
+        orientation: 'vertical'
+        AppLabel:
+            text: root.title
+            bold: True
+            font_size: '16sp'
+            size_hint_y: 1
+        MutedLabel:
+            text: root.hint
+            size_hint_y: 1
+
+
+<HomeScreen>:
+    name: 'home'
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+            title: 'luvvix'
+            show_logout: True
+        BusyBar:
+            active: app.auth_vm.busy
+        ScrollView:
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                padding: dp(16)
+                spacing: dp(12)
+                size_hint_y: None
+                height: self.minimum_height
+                Card:
+                    MutedLabel:
+                        text: 'Добро пожаловать,'
+                    TitleLabel:
+                        text: app.auth_vm.display_name
+                    AppLabel:
+                        text: 'Роль: [b]' + app.auth_vm.role_title + '[/b]'
+                        markup: True
+                        color: T.ACCENT
+                MenuTile:
+                    icon: '#'
+                    title: 'Справочник ТМЦ'
+                    hint: 'Список, поиск и фильтрация'
+                    on_release: app.nav.go('items')
+                MenuTile:
+                    icon: '+'
+                    title: 'Добавить ТМЦ'
+                    hint: 'Новая запись в справочнике'
+                    disabled: 'items:create' not in app.auth_vm.permissions
+                    opacity: 1 if not self.disabled else 0
+                    height: dp(76) if not self.disabled else 0
+                    on_release: app.nav.go('item_form', mode='create')
+                MenuTile:
+                    icon: '@'
+                    title: 'Пользователи и роли'
+                    hint: 'Назначение ролей, блокировка'
+                    disabled: 'users:manage' not in app.auth_vm.permissions
+                    opacity: 1 if not self.disabled else 0
+                    height: dp(76) if not self.disabled else 0
+                    on_release: app.nav.go('users')
+                Widget:
+                    size_hint_y: None
+                    height: dp(8)
+                DangerButton:
+                    text: 'Выйти из аккаунта'
+                    on_release: app.confirm_logout()

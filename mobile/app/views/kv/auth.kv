@@ -1,0 +1,194 @@
+#:import T app.views.theme
+#:import dp kivy.metrics.dp
+
+<ServerSettings@BoxLayout>:
+    orientation: 'vertical'
+    padding: dp(6)
+    spacing: dp(10)
+    MutedLabel:
+        text: 'Эмулятор: http://10.0.2.2:8000 · телефон: http://<IP ПК>:8000'
+        color: 0.85, 0.87, 0.92, 1
+    Field:
+        id: url
+        hint_text: 'http://192.168.1.10:8000'
+    ErrorLabel:
+        id: err
+    BoxLayout:
+        size_hint_y: None
+        height: dp(46)
+        spacing: dp(10)
+        SecondaryButton:
+            id: cancel
+            text: 'Отмена'
+        PrimaryButton:
+            id: save
+            text: 'Сохранить'
+
+<AuthLayout@ScrollView>:
+    do_scroll_x: False
+    bar_width: 0
+
+
+<LoginScreen>:
+    name: 'login'
+    BoxLayout:
+        orientation: 'vertical'
+        BusyBar:
+            active: app.auth_vm.busy
+        AuthLayout:
+            BoxLayout:
+                orientation: 'vertical'
+                padding: [dp(22), dp(40), dp(22), dp(22)]
+                spacing: dp(14)
+                size_hint_y: None
+                height: self.minimum_height
+                Label:
+                    text: 'luvvix'
+                    font_size: '40sp'
+                    bold: True
+                    color: T.ACCENT
+                    size_hint_y: None
+                    height: dp(56)
+                MutedLabel:
+                    text: 'Учёт товарно-материальных ценностей'
+                    halign: 'center'
+                Widget:
+                    size_hint_y: None
+                    height: dp(12)
+                Card:
+                    TitleLabel:
+                        text: 'Вход'
+                    FieldCaption:
+                        text: 'Логин или email'
+                    Field:
+                        id: login
+                        hint_text: 'ivanov'
+                        on_text_validate: password.focus = True
+                    FieldCaption:
+                        text: 'Пароль'
+                    Field:
+                        id: password
+                        password: True
+                        hint_text: '••••••••'
+                        on_text_validate: root.do_login()
+                    ErrorLabel:
+                        text: app.auth_vm.error
+                    PrimaryButton:
+                        text: 'Проверка…' if app.auth_vm.busy else 'Войти'
+                        disabled: app.auth_vm.busy
+                        on_release: root.do_login()
+                    MutedLabel:
+                        text: 'После ввода пароля на почту придёт код подтверждения'
+                        halign: 'center'
+                        font_size: '12sp'
+                LinkButton:
+                    text: 'Нет аккаунта? Зарегистрироваться'
+                    on_release: app.nav.go('register')
+                LinkButton:
+                    text: 'Сервер: ' + app.server_label
+                    color: T.MUTED
+                    font_size: '13sp'
+                    on_release: root.open_server_settings()
+
+
+<RegisterScreen>:
+    name: 'register'
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+            title: 'Регистрация'
+            show_back: True
+        BusyBar:
+            active: app.auth_vm.busy
+        AuthLayout:
+            BoxLayout:
+                orientation: 'vertical'
+                padding: dp(18)
+                spacing: dp(12)
+                size_hint_y: None
+                height: self.minimum_height
+                Card:
+                    FieldCaption:
+                        text: 'Логин *'
+                    Field:
+                        id: username
+                        hint_text: 'латиница, цифры, _ . -'
+                        on_text_validate: email.focus = True
+                    FieldCaption:
+                        text: 'Email * (на него придёт код)'
+                    Field:
+                        id: email
+                        hint_text: 'name@example.com'
+                        input_type: 'mail'
+                        on_text_validate: full_name.focus = True
+                    FieldCaption:
+                        text: 'ФИО'
+                    Field:
+                        id: full_name
+                        hint_text: 'Иванов Иван Иванович'
+                        on_text_validate: password.focus = True
+                    FieldCaption:
+                        text: 'Пароль * (от 8 символов, буквы и цифры)'
+                    Field:
+                        id: password
+                        password: True
+                        on_text_validate: password2.focus = True
+                    FieldCaption:
+                        text: 'Повторите пароль *'
+                    Field:
+                        id: password2
+                        password: True
+                        on_text_validate: root.do_register()
+                    ErrorLabel:
+                        text: app.auth_vm.error
+                    PrimaryButton:
+                        text: 'Отправка…' if app.auth_vm.busy else 'Зарегистрироваться'
+                        disabled: app.auth_vm.busy
+                        on_release: root.do_register()
+                MutedLabel:
+                    text: 'Новые пользователи получают роль «Кладовщик». Расширить права может администратор.'
+                    halign: 'center'
+
+
+<CodeScreen>:
+    name: 'code'
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+            title: root.bar_title
+            show_back: True
+        BusyBar:
+            active: app.auth_vm.busy
+        AuthLayout:
+            BoxLayout:
+                orientation: 'vertical'
+                padding: dp(18)
+                spacing: dp(12)
+                size_hint_y: None
+                height: self.minimum_height
+                Card:
+                    TitleLabel:
+                        text: 'Введите код из письма'
+                    MutedLabel:
+                        text: root.hint
+                    Field:
+                        id: code
+                        hint_text: '000000'
+                        input_filter: 'int'
+                        input_type: 'number'
+                        font_size: '26sp'
+                        height: dp(60)
+                        halign: 'center'
+                        on_text: root.on_code_text(self.text)
+                        on_text_validate: root.do_verify()
+                    ErrorLabel:
+                        text: app.auth_vm.error
+                    PrimaryButton:
+                        text: 'Проверка…' if app.auth_vm.busy else 'Подтвердить'
+                        disabled: app.auth_vm.busy
+                        on_release: root.do_verify()
+                    LinkButton:
+                        text: ('Отправить код ещё раз через %d с' % root.cooldown) if root.cooldown else 'Отправить код ещё раз'
+                        disabled: root.cooldown > 0 or app.auth_vm.busy
+                        color: T.MUTED if self.disabled else T.ACCENT
+                        on_release: root.do_resend()

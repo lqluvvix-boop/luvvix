@@ -1,0 +1,282 @@
+#:import T app.views.theme
+#:import dp kivy.metrics.dp
+
+<ItemsScreen>:
+    name: 'items'
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+            title: 'Справочник ТМЦ'
+            show_back: True
+            show_logout: True
+            action_text: '+' if 'items:create' in app.auth_vm.permissions else ''
+            on_action: app.nav.go('item_form', mode='create')
+        BusyBar:
+            active: app.items_vm.busy
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: self.minimum_height
+            padding: [dp(12), dp(10), dp(12), dp(6)]
+            spacing: dp(8)
+            Field:
+                id: search
+                hint_text: 'Поиск: название, инв. номер, место'
+                on_text: root.on_search_text(self.text)
+            BoxLayout:
+                size_hint_y: None
+                height: dp(46)
+                spacing: dp(8)
+                AppSpinner:
+                    id: category
+                    text: app.items_vm.category_name
+                    on_text: root.on_filter(self.text)
+                AppSpinner:
+                    id: sort
+                    text: app.items_vm.sort_name
+                    on_text: root.on_sort(self.text)
+            BoxLayout:
+                size_hint_y: None
+                height: dp(24)
+                MutedLabel:
+                    text: 'Найдено: %d' % app.items_vm.total
+                    size_hint_y: 1
+                Button:
+                    text: 'Сбросить фильтры'
+                    size_hint_x: None
+                    width: dp(150)
+                    font_size: '13sp'
+                    color: T.ACCENT
+                    background_normal: ''
+                    background_color: 0, 0, 0, 0
+                    on_release: root.reset_filters()
+        ErrorLabel:
+            text: app.items_vm.error
+            padding: [dp(12), 0]
+        RelativeLayout:
+            RecycleView:
+                id: rv
+                viewclass: 'ItemRow'
+                bar_width: dp(4)
+                on_scroll_stop: root.on_scroll(self)
+                RecycleBoxLayout:
+                    default_size: None, dp(64)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    orientation: 'vertical'
+                    spacing: dp(1)
+            MutedLabel:
+                text: 'Ничего не найдено' if (not app.items_vm.busy and app.items_vm.total == 0 and not app.items_vm.error) else ''
+                halign: 'center'
+                pos_hint: {'center_y': 0.7}
+        SecondaryButton:
+            text: 'Загрузить ещё'
+            opacity: 1 if app.items_vm.has_more else 0
+            disabled: not app.items_vm.has_more or app.items_vm.busy
+            height: dp(46) if app.items_vm.has_more else 0
+            on_release: app.items_vm.load_more()
+
+
+<InfoRow>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: self.minimum_height
+    padding: [0, dp(4)]
+    MutedLabel:
+        text: root.caption
+        font_size: '12sp'
+    AppLabel:
+        text: root.value
+        font_size: '16sp'
+
+<HistoryRow>:
+    canvas.before:
+        Color:
+            rgba: T.BORDER
+        Rectangle:
+            pos: self.x, self.y
+            size: self.width, dp(1)
+
+
+<ItemDetailScreen>:
+    name: 'item_detail'
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+            title: 'Карточка ТМЦ'
+            show_back: True
+        BusyBar:
+            active: app.detail_vm.busy
+        ScrollView:
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                padding: dp(14)
+                spacing: dp(12)
+                size_hint_y: None
+                height: self.minimum_height
+                ErrorLabel:
+                    text: app.detail_vm.error
+                Card:
+                    TitleLabel:
+                        id: title
+                        text: 'Загрузка…'
+                    BoxLayout:
+                        id: fields
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(4)
+                BoxLayout:
+                    size_hint_y: None
+                    height: dp(46)
+                    spacing: dp(10)
+                    opacity: 1 if app.detail_vm.item else 0
+                    PrimaryButton:
+                        text: 'Изменить'
+                        disabled: not app.detail_vm.item or not ('items:update' in app.auth_vm.permissions or 'items:update_fact' in app.auth_vm.permissions)
+                        on_release: root.edit()
+                    DangerButton:
+                        text: 'Удалить'
+                        disabled: not app.detail_vm.item or 'items:delete' not in app.auth_vm.permissions
+                        on_release: root.ask_delete()
+                Card:
+                    opacity: 1 if app.detail_vm.history else 0
+                    TitleLabel:
+                        text: 'История изменений'
+                        font_size: '17sp'
+                    BoxLayout:
+                        id: history
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(6)
+
+
+<ItemFormScreen>:
+    name: 'item_form'
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+            title: root.title
+            show_back: True
+        BusyBar:
+            active: app.form_vm.busy
+        ScrollView:
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                padding: dp(14)
+                spacing: dp(12)
+                size_hint_y: None
+                height: self.minimum_height
+                AppLabel:
+                    text: 'Ваша роль позволяет менять только количество, место и описание' if root.fact_only else ''
+                    color: T.ACCENT
+                    font_size: '13sp'
+                    height: (self.texture_size[1] + dp(4)) if self.text else 0
+                Card:
+                    FieldCaption:
+                        text: 'Наименование *'
+                    Field:
+                        id: name
+                        readonly: root.fact_only
+                    FieldCaption:
+                        text: 'Инвентарный номер *'
+                    Field:
+                        id: inventory_number
+                        readonly: root.fact_only
+                    FieldCaption:
+                        text: 'Категория'
+                    AppSpinner:
+                        id: category
+                        disabled: root.fact_only
+                    BoxLayout:
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(10)
+                        BoxLayout:
+                            orientation: 'vertical'
+                            size_hint_y: None
+                            height: self.minimum_height
+                            FieldCaption:
+                                text: 'Количество'
+                            Field:
+                                id: quantity
+                                input_filter: 'int'
+                                input_type: 'number'
+                        BoxLayout:
+                            orientation: 'vertical'
+                            size_hint_y: None
+                            height: self.minimum_height
+                            size_hint_x: 0.6
+                            FieldCaption:
+                                text: 'Ед. изм.'
+                            Field:
+                                id: unit
+                                readonly: root.fact_only
+                    FieldCaption:
+                        text: 'Цена за единицу, ₽'
+                    Field:
+                        id: price
+                        input_filter: 'float'
+                        input_type: 'number'
+                        readonly: root.fact_only
+                    FieldCaption:
+                        text: 'Местонахождение'
+                    Field:
+                        id: location
+                        hint_text: 'Кабинет 101'
+                    FieldCaption:
+                        text: 'Ответственный'
+                    AppSpinner:
+                        id: responsible
+                        disabled: root.fact_only
+                    FieldCaption:
+                        text: 'Описание'
+                    Field:
+                        id: description
+                        multiline: True
+                        height: dp(96)
+                        padding: [dp(12), dp(10)]
+                ErrorLabel:
+                    text: app.form_vm.error
+                PrimaryButton:
+                    text: 'Сохранение…' if app.form_vm.busy else ('Создать' if app.form_vm.mode == 'create' else 'Сохранить изменения')
+                    disabled: app.form_vm.busy
+                    on_release: root.save()
+                SecondaryButton:
+                    text: 'Отмена'
+                    on_release: app.nav.back()
+
+
+<UsersScreen>:
+    name: 'users'
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+            title: 'Пользователи и роли'
+            show_back: True
+        BusyBar:
+            active: app.users_vm.busy
+        BoxLayout:
+            size_hint_y: None
+            height: dp(66)
+            padding: [dp(12), dp(10)]
+            Field:
+                id: search
+                hint_text: 'Поиск по логину или ФИО'
+                on_text_validate: app.users_vm.load(self.text)
+        ErrorLabel:
+            text: app.users_vm.error
+            padding: [dp(12), 0]
+        ScrollView:
+            do_scroll_x: False
+            BoxLayout:
+                id: user_list
+                orientation: 'vertical'
+                padding: [dp(12), dp(4), dp(12), dp(12)]
+                spacing: dp(10)
+                size_hint_y: None
+                height: self.minimum_height
