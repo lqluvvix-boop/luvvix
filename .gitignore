@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+*.db
+.buildozer/
+bin/
+.pytest_cache/
