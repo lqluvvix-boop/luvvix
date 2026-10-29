@@ -10,20 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Find mobile app (unzip mobile.zip if needed)
-        run: |
-          SPEC=$(find . -name buildozer.spec -not -path "*/.buildozer/*" | head -1)
-          if [ -z "$SPEC" ] && [ -f mobile.zip ]; then
-            unzip -q -o mobile.zip
-            SPEC=$(find . -name buildozer.spec -not -path "*/.buildozer/*" | head -1)
-          fi
-          if [ -z "$SPEC" ]; then
-            echo "::error::mobile.zip not found. Upload mobile.zip on the Code tab (Add file - Upload files)."
-            exit 1
-          fi
-          echo "APP_DIR=$(dirname "$SPEC")" >> $GITHUB_ENV
-          echo "Found: $SPEC"
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -34,21 +20,34 @@ jobs:
           sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf automake libtool \
             pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
 
-      - name: Buildozer
-        run: pip install --upgrade buildozer cython setuptools
+      - name: Buildozer (fixed versions)
+        run: pip install buildozer==1.5.0 cython==3.0.11 "setuptools<70"
 
       - name: Cache buildozer
         uses: actions/cache@v4
         with:
           path: ~/.buildozer
-          key: buildozer-v1
+          key: buildozer-v2
 
       - name: Build
+        working-directory: mobile
         run: |
-          cd "$APP_DIR"
-          yes | buildozer -v android debug
+          set -o pipefail
+          yes | buildozer -v android debug 2>&1 | tee build.log
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: luvvix-apk
-          path: ${{ env.APP_DIR }}/bin/*.apk
+          path: mobile/bin/*.apk
+
+      - name: Save error log
+        if: failure()
+        run: tail -n 300 mobile/build.log > build-error.txt || echo "no log" > build-error.txt
+
+      - name: Upload error log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-error-log
+          path: build-error.txt
